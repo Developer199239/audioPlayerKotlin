@@ -1,5 +1,6 @@
 package com.jalilurrahman.audioplayerkotlin;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -9,10 +10,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.session.MediaSessionManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.v4.app.NotificationCompat;
@@ -21,6 +24,9 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.media.app.NotificationCompat.MediaStyle;
 import android.util.Log;
 
 import java.io.IOException;
@@ -546,16 +552,24 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         Bitmap largeIcon = BitmapFactory.decodeResource(getResources(),
                 R.drawable.image5); //replace with your own image
 
-        // Create a new Notification
-        NotificationCompat.Builder notificationBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(this)
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel("" + NOTIFICATION_ID, "NOTIFICATION_CHANNEL_NAME", importance);
+            channel.setDescription("");
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "" + NOTIFICATION_ID)
                 // Hide the timestamp
                 .setShowWhen(false)
                 // Set the Notification style
-                /*.setStyle(new NotificationCompat.MediaStyle()
-                        // Attach our MediaSession token
+                .setStyle(new MediaStyle()
                         .setMediaSession(mediaSession.getSessionToken())
-                        // Show our playback controls in the compat view
-                        .setShowActionsInCompactView(0, 1, 2))*/
+                        .setShowActionsInCompactView(0, 1, 2)
+                )
+
                 // Set the Notification color
                 .setColor(getResources().getColor(R.color.colorAccent))
                 // Set the large and small icons
@@ -570,7 +584,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 .addAction(notificationAction, "pause", play_pauseAction)
                 .addAction(android.R.drawable.ic_media_next, "next", playbackAction(2));
 
-        ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID, notificationBuilder.build());
+        notificationManager.notify(NOTIFICATION_ID, builder.build());
     }
 
 
